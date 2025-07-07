@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Matchmaking Deck Viewer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      text-align: center;
+      padding: 30px;
+    }
+
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 10px;
+      border-radius: 8px;
+      border: none;
+    }
+
+    button {
+      background-color: #1da1f2;
+      color: white;
+      cursor: pointer;
+    }
+
+    .player-block {
+      background: #1f1f1f;
+      padding: 15px;
+      margin: 20px auto;
+      border-radius: 10px;
+      width: 300px;
+      box-shadow: 0 0 10px #444;
+    }
+
+    .player-block h3 {
+      margin-bottom: 10px;
+      color: #00ffc8;
+    }
+
+    .card-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .card-list li {
+      padding: 5px 0;
+      border-bottom: 1px solid #333;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Path of Legend Matchmaking Viewer</h2>
+  <input type="number" id="medals" placeholder="Enter medals (e.g. 3926)" />
+  <button onclick="fetchMatches()">Fetch Matches</button>
+
+  <div id="results"></div>
+
+  <script>
+    async function fetchMatches() {
+      const medals = document.getElementById("medals").value;
+      const resultsEl = document.getElementById("results");
+      resultsEl.innerHTML = "<p>Loading...</p>";
+
+      try {
+        const res = await fetch("https://pop-tuoh.onrender.com/get-deck", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ medals: parseInt(medals) })
+        });
+
+        const data = await res.json();
+        resultsEl.innerHTML = "";
+
+        if (!data.matching_players || data.matching_players.length === 0) {
+          resultsEl.innerHTML = "<p>No matching players found.</p>";
+          return;
+        }
+
+        data.matching_players.forEach(playerObj => {
+          const block = document.createElement("div");
+          block.className = "player-block";
+
+          const title = document.createElement("h3");
+          title.innerText = playerObj.player;
+          block.appendChild(title);
+
+          const ul = document.createElement("ul");
+          ul.className = "card-list";
+
+          playerObj.deck.forEach(card => {
+            const li = document.createElement("li");
+            li.innerText = card.name;
+            ul.appendChild(li);
+          });
+
+          block.appendChild(ul);
+          resultsEl.appendChild(block);
+        });
+
+      } catch (err) {
+        resultsEl.innerHTML = `<p style="color: red;">Error: ${err.message}</p>`;
+      }
+    }
+  </script>
+
+</body>
+</html>
